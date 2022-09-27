@@ -60,6 +60,7 @@ use ESMF,  only: ESMF_METHOD_INITIALIZE, ESMF_MethodRemove, ESMF_State
 use ESMF,  only: ESMF_LOGMSG_INFO, ESMF_RC_ARG_BAD, ESMF_VM, ESMF_Time
 use ESMF,  only: ESMF_TimeInterval, ESMF_MAXSTR, ESMF_VMGetCurrent
 use ESMF,  only: ESMF_VMGet, ESMF_TimeGet, ESMF_TimeIntervalGet, ESMF_MeshGet
+use ESMF,  only: ESMF_MeshSet
 use ESMF,  only: ESMF_MethodExecute, ESMF_Mesh, ESMF_DeLayout, ESMF_Distgrid
 use ESMF,  only: ESMF_DistGridConnection, ESMF_StateItem_Flag, ESMF_KIND_I4
 use ESMF,  only: ESMF_KIND_I8, ESMF_FAILURE, ESMF_DistGridCreate, ESMF_MeshCreate
@@ -865,7 +866,7 @@ subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
   real(ESMF_KIND_R8)    , pointer            :: ownedElemCoords(:)
   real(ESMF_KIND_R8)    , pointer            :: lat(:), latMesh(:)
   real(ESMF_KIND_R8)    , pointer            :: lon(:), lonMesh(:)
-  integer(ESMF_KIND_I4) , pointer            :: mask(:), maskMesh(:)
+  integer(ESMF_KIND_I4) , pointer            :: mask(:), maskMesh(:), elementMask(:)
   real(ESMF_KIND_R8)                         :: diff_lon, diff_lat
   real                                       :: eps_omesh
   real(ESMF_KIND_R8)                         :: L2_to_rad2
@@ -998,8 +999,10 @@ subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
     allocate(lonMesh(numOwnedElements), lon(numOwnedElements))
     allocate(latMesh(numOwnedElements), lat(numOwnedElements))
     allocate(maskMesh(numOwnedElements), mask(numOwnedElements))
+    allocate(elementMask(numOwnedElements))
 
-    call ESMF_MeshGet(Emesh, ownedElemCoords=ownedElemCoords, rc=rc)
+    call ESMF_MeshGet(Emesh, ownedElemCoords=ownedElemCoords, &
+                             elementMask=elementMask, rc=rc)
     if (ChkErr(rc,__LINE__,u_FILE_u)) return
     do n = 1,numOwnedElements
       lonMesh(n) = ownedElemCoords(2*n-1)
@@ -1021,6 +1024,7 @@ subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
         mask(n) = ocean_grid%mask2dT(ig,jg)
         lon(n)  = ocean_grid%geolonT(ig,jg)
         lat(n)  = ocean_grid%geolatT(ig,jg)
+        elementMask(n) = mask(n)
       end do
     end do
 
@@ -1049,6 +1053,7 @@ subroutine InitializeRealize(gcomp, importState, exportState, clock, rc)
         call MOM_error(FATAL, err_msg)
       end if
     end do
+    call ESMF_MeshSet(Emesh, elementMask)
 
     ! realize the import and export fields using the mesh
     call MOM_RealizeFields(importState, fldsToOcn_num, fldsToOcn, "Ocn import", mesh=Emesh, rc=rc)
