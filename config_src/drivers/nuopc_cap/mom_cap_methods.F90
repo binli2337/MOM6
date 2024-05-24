@@ -21,6 +21,7 @@ use MOM_surface_forcing_nuopc, only: ice_ocean_boundary_type
 use MOM_grid,                  only: ocean_grid_type
 use MOM_domains,               only: pass_var
 use mpp_domains_mod,           only: mpp_get_compute_domain
+real(ESMF_KIND_R8), parameter :: fillValue = 9.99e20_ESMF_KIND_R8
 
 ! By default make data private
 implicit none; private
@@ -351,10 +352,15 @@ subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary,
           ig = i + ocean_grid%isc - isc
           !rotate
           do ib = 1, nsc
-            ice_ocean_boundary%ustkb(i,j,ib) = ocean_grid%cos_rot(ig,jg)*stkx(i,j,ib) &
+            if(abs(stkx(i,j,ib)-fillValue).lt.0.1) then
+              ice_ocean_boundary%ustkb(i,j,ib) = 0.0
+              ice_ocean_boundary%vstkb(i,j,ib) = 0.0
+            else
+              ice_ocean_boundary%ustkb(i,j,ib) = ocean_grid%cos_rot(ig,jg)*stkx(i,j,ib) &
                  - ocean_grid%sin_rot(ig,jg)*stky(i,j,ib)
-            ice_ocean_boundary%vstkb(i,j,ib) = ocean_grid%cos_rot(ig,jg)*stky(i,j,ib) &
+              ice_ocean_boundary%vstkb(i,j,ib) = ocean_grid%cos_rot(ig,jg)*stky(i,j,ib) &
                  + ocean_grid%sin_rot(ig,jg)*stkx(i,j,ib)
+            endif
           enddo
           ! apply masks
           ice_ocean_boundary%ustkb(i,j,:) = ice_ocean_boundary%ustkb(i,j,:) * ocean_grid%mask2dT(ig,jg)
