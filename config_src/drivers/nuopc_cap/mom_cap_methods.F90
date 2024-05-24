@@ -21,7 +21,6 @@ use MOM_surface_forcing_nuopc, only: ice_ocean_boundary_type
 use MOM_grid,                  only: ocean_grid_type
 use MOM_domains,               only: pass_var
 use mpp_domains_mod,           only: mpp_get_compute_domain
-real(ESMF_KIND_R8), parameter :: fillValue = 9.99e20_ESMF_KIND_R8
 
 ! By default make data private
 implicit none; private
@@ -90,6 +89,7 @@ subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary,
   real(ESMF_KIND_R8), allocatable :: stkx(:,:,:)
   real(ESMF_KIND_R8), allocatable :: stky(:,:,:)
   character(len=*)  , parameter   :: subname = '(mom_import)'
+  real(ESMF_KIND_R8), parameter :: fillValue = 9.99e20_ESMF_KIND_R8
 
   rc = ESMF_SUCCESS
 
