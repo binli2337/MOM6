@@ -57,6 +57,7 @@ type(ESMF_GeomType_Flag) :: geomtype      !< SMF type describing type of
 real(ESMF_KIND_R8), public, allocatable :: mod2med_areacor(:) ! ratios of model areas to input mesh areas
 real(ESMF_KIND_R8), public, allocatable :: med2mod_areacor(:) ! ratios of input mesh areas to model areas
 character(len=*),parameter :: u_FILE_u =  __FILE__
+character(len=ESMF_MAXSTR)     :: msgString
 
 contains
 
@@ -545,6 +546,11 @@ subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary,
           if( (trim(casename) == "ufs.hafs") .and. set_missing_stks_to_zero ) then
             do ib = 1, nsc
               if( (abs(stkx(i,j,ib)-9.99E20_ESMF_KIND_R8) <= 0.01_ESMF_KIND_R8) ) then
+                if(i < 10 .and. j<10 .and. ib == 3) then 
+                      write(msgString,'(A,3i8)') & 
+                      'set ice_ocean_boundary%ustkb=0 here',i,j,ib
+                      call ESMF_LogWrite(trim(msgString), ESMF_LOGMSG_INFO)
+                endif
                 ice_ocean_boundary%ustkb(i,j,ib) = 0.0
                 ice_ocean_boundary%vstkb(i,j,ib) = 0.0
               else
