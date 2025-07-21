@@ -73,11 +73,10 @@ end subroutine mom_set_geomtype
 !! (1) it imports surface fluxes using data from the mediator; and
 !! (2) it can apply restoring in SST and SSS.
 !! (3) it can convert imported stokes drift components to zero if they are missing.
-subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary, casename, &
+subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary, &
                       set_missing_stks_to_zero, rc)
   type(ocean_public_type)       , intent(in)    :: ocean_public             !< Ocean surface state
   type(ocean_grid_type)         , intent(in)    :: ocean_grid               !< Ocean model grid
-  character(ESMF_MAXSTR)        , intent(in)    :: casename                 !< Case name for the experiment
   logical                       , intent(in)    :: set_missing_stks_to_zero !< If true, set
                                                                             !! missing stokes drift to zero
   type(ESMF_State)              , intent(inout) :: importState              !< incoming data from mediator
@@ -542,7 +541,7 @@ subroutine mom_import(ocean_public, ocean_grid, importState, ice_ocean_boundary,
         do i = isc, iec
           ig = i + ocean_grid%isc - isc
           !rotate
-          if( (trim(casename) == "ufs.hafs") .and. set_missing_stks_to_zero ) then
+          if( set_missing_stks_to_zero ) then
             do ib = 1, nsc
               if( (abs(stkx(i,j,ib)-9.99E20_ESMF_KIND_R8) <= 0.01_ESMF_KIND_R8) ) then
                 ice_ocean_boundary%ustkb(i,j,ib) = 0.0
